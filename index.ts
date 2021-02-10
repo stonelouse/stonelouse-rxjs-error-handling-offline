@@ -25,10 +25,26 @@ function fetchPikachu(index) {
   return ajax("https://pokeapi.co/api/v2/pokemon/pikachu");
 }
 
+/* --------------------------------------------------------
+  The Observable chain is broken after the 6th fetch
+ */
 interval(1000)
   .pipe(
     switchMap((_, index) => fetchPikachu(index)),
     catchError(_ => NEVER),
+    map(e => e.response),
+    map(char => char.name),
+    take(10)
+  )
+  .subscribe(console.log, console.log);
+
+/* --------------------------------------------------------
+  To keep the fetching of data alive we have to make sure 
+  that errors never happen on the main Observable chain.
+ */
+interval(1000)
+  .pipe(
+    switchMap((_, index) => fetchPikachu(index).pipe(catchError(_ => NEVER))),
     map(e => e.response),
     map(char => char.name),
     take(10)
